@@ -2,13 +2,13 @@
 
 BDD : MariaDB (MySQL)
 
-- **URL de la BDD : nono0302.tech**
+- URL de la BDD : https://nono0302.hopto.me
 - Port : 3306
 - Utilisateur : public
 - Mot de passe : MW24WgrDB
 - Database : ProgrammeTV
 
-mysql -h nono0302.tech -P 3306 -u public -pMW24WgrDB ProgrammeTV
+mysql -h nono0302.hopto.me -P 3306 -u public -pMW24WgrDB ProgrammeTV
 
 ## Si vous voulez créer votre propre BDD
 
