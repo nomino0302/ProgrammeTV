@@ -302,7 +302,7 @@ def main():
     """Fonction principale, elle exécute toutes les autres fonctions"""
     
     nb_etapes = 5
-    if RESUME:
+    if RESUMES:
         nb_etapes += 1
     nb = 1
 
@@ -358,14 +358,14 @@ if __name__ == "__main__":
 
     DEBUG = False
     RESET = False
-    RESUME = False
+    RESUMES = False
 
     if "-d" in sys.argv or "--debug" in sys.argv:
         DEBUG = True
     if "-r" in sys.argv or "--reset" in sys.argv:
         RESET = True
-    if "--resume" in sys.argv:
-        RESUME = True
+    if "--resumes" in sys.argv:
+        RESUMES = True
 
     # Créer le dossier 'logs' si nécessaire
     log_dir = 'logs'
