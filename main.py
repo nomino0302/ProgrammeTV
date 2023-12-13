@@ -7,7 +7,6 @@ from datetime import datetime, timedelta
 import sys
 import os
 import logging
-import pickle
 
 
 def init_database():
@@ -302,45 +301,54 @@ def clear_channels():
 def main():
     """Fonction principale, elle exécute toutes les autres fonctions"""
     
-    nb_etapes = 6
+    nb_etapes = 5
+    if RESUME:
+        nb_etapes += 1
+    nb = 1
 
     # On utilise "START TRANSACTION ... COMMIT" à toutes les fonctions au cas où elles
     # viendraient à retourner une exception, elles retrouveront leurs états d'origine (ROLLBACK dans le else à la fin du script)
     cursor.execute("START TRANSACTION;")
-    print(f"(1/{nb_etapes}) Préparation de la base de donnée (RESET={RESET}) ", end="")
+    print(f"({nb}/{nb_etapes}) Préparation de la base de donnée (RESET={RESET}) ", end="")
     init_database()
     print("..... OK!")
     cursor.execute("COMMIT;")
+    nb += 1
 
     cursor.execute("START TRANSACTION;")
-    print(f"(2/{nb_etapes}) Récupération des chaînes et mise à jour de la BDD ", end="")
+    print(f"({nb}/{nb_etapes}) Récupération des chaînes et mise à jour de la BDD ", end="")
     update_channels()
     print("..... OK!")
     cursor.execute("COMMIT;")
+    nb += 1
 
     cursor.execute("START TRANSACTION;")
-    print(f"(3/{nb_etapes}) Suppression des anciennes données (non comprises entre J-1 et J+7) ", end="")
+    print(f"({nb}/{nb_etapes}) Suppression des anciennes données (non comprises entre J-1 et J+7) ", end="")
     needed_dates = delete_old_shows()
     print("..... OK!")
     cursor.execute("COMMIT;")
+    nb += 1
 
     cursor.execute("START TRANSACTION;")
-    print(f"(4/{nb_etapes}) Récupération des émissions et mise à jour de la BDD ", end="\r")
+    print(f"({nb}/{nb_etapes}) Récupération des émissions et mise à jour de la BDD ", end="\r")
     get_shows(needed_dates, nb_etapes)
     print("..... OK!")
     cursor.execute("COMMIT;")
 
-    cursor.execute("START TRANSACTION;")
-    print(f"(5/{nb_etapes}) Récupération des résumées et mise à jour de la BDD ", end="\r")
-    get_resumes(needed_dates, nb_etapes)
-    print("..... OK!")
-    cursor.execute("COMMIT;")
+    if RESUME:
+        cursor.execute("START TRANSACTION;")
+        print(f"({nb}/{nb_etapes}) Récupération des résumées et mise à jour de la BDD ", end="\r")
+        get_resumes(needed_dates, nb_etapes)
+        print("..... OK!")
+        cursor.execute("COMMIT;")
+        nb += 1
 
     cursor.execute("START TRANSACTION;")
-    print(f"(6/{nb_etapes}) Suppression des chaînes non utilisées (notamment par Programmation)", end="")
+    print(f"({nb}/{nb_etapes}) Suppression des chaînes non utilisées (notamment par Programmation)", end="")
     clear_channels()
     print("..... OK!")
     cursor.execute("COMMIT;")
+    nb += 1
 
     print("Base de donnée ProgrammeTV à jour !")
     logger.info("Base de donnée ProgrammeTV à jour !")
@@ -350,11 +358,14 @@ if __name__ == "__main__":
 
     DEBUG = False
     RESET = False
+    RESUME = False
 
     if "-d" in sys.argv or "--debug" in sys.argv:
         DEBUG = True
     if "-r" in sys.argv or "--reset" in sys.argv:
         RESET = True
+    if "--resume" in sys.argv:
+        RESUME = True
 
     # Créer le dossier 'logs' si nécessaire
     log_dir = 'logs'
@@ -392,12 +403,7 @@ if __name__ == "__main__":
     cursor = conn.cursor()
     logger.info(f"Connecté à MariaDB {cred['host']} avec l'utilisateur {cred['user']}")
 
-    # On récupère le fichier cookies.pkl si il existe
     session = requests.Session()
-    if "cookies.pkl" in os.listdir():
-        with open("cookies.pkl", "rb") as f:
-            session.cookies.update(pickle.load(f))
-        logger.info("Fichier cookies.pkl chargé")
 
     try:
         main()
@@ -414,8 +420,3 @@ if __name__ == "__main__":
         cursor.close()
         conn.close()
         logger.info(f"Déconnecté de MariaDB {cred['host']}")
-
-        # Sauvegarde des cookies
-        with open("cookies.pkl", "wb") as f:
-            pickle.dump(session.cookies, f)
-        logger.info("Fichier cookies.pkl sauvegardé")
