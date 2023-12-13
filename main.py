@@ -335,7 +335,7 @@ def main():
     print("..... OK!")
     cursor.execute("COMMIT;")
 
-    if RESUME:
+    if RESUMES:
         cursor.execute("START TRANSACTION;")
         print(f"({nb}/{nb_etapes}) Récupération des résumées et mise à jour de la BDD ", end="\r")
         get_resumes(needed_dates, nb_etapes)
