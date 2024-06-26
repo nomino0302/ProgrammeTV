@@ -6,4 +6,4 @@ mysql-connector-python==8.4.0
 protobuf==5.27.0
 requests==2.32.2
 soupsieve==2.5
-urllib3==2.2.1
+urllib3==2.2.2
